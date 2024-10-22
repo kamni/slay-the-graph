@@ -31,10 +31,29 @@ def _populate_nodes(num_columns: int) -> List[List[Node]]:
     nodes.append(first_row)
 
     id_counter = 3
-    # TODO: implement intermediate rows
-    # increment id_counter
-    # one less than specified rows (second-to-last-row isn't randomly generated)
-    # intermediate node should be 2
+    if num_columns > 0:
+        if num_columns > 2:
+            midpoint = num_columns // 2
+        else:
+            midpoint = None
+
+        for idx in range(num_columns):
+            row: List[Nodes] = []
+
+            if idx == midpoint:
+                num_nodes = 2
+            else:
+                num_nodes = random.randint(3, 4)
+
+            for jdx in range(num_nodes):
+                row.append(
+                    Node(
+                        id=id_counter + jdx,
+                        location=Location(column=len(nodes), row=jdx),
+                    ),
+                )
+            nodes.append(row)
+            id_counter += num_nodes
 
     second_to_last_row: List[Node] = []
     for idx in range(2):
@@ -63,6 +82,15 @@ def _does_not_cross(
     possible_connection: Node,
     already_connected: List[Tuple[Node, Node]]
 ) -> bool:
+    """
+    Check that a proposed connection does not cross an existing connection.
+
+    @param node: node to connect from
+    @param possible_connection: node to connect to
+    @param already_connected: list of nodes connected to each other
+    @return: true if the possible connection is valid
+    """
+
     cross_points = list(
         filter(
             lambda x: (
@@ -89,6 +117,7 @@ def _get_already_connected(column: List[Node]) -> List[Tuple[Node, Node]]:
     @param column: list of nodes representing a column in the Graph
     @return: list of nodes that are connected together
     """
+
     already_connected: List[Tuple[Node, Node]] = []
     for connected_node in column:
         for connection in (connected_node.connections or []):
@@ -110,18 +139,6 @@ def _find_valid_connections(
     @return: list of viable nodes where a connection can be made, with the
         number of connections the node already has.
     """
-
-    # This are always fixed, to avoid weird graphs
-    if len(current_column) == 2 and len(next_column) == 4:
-        if node.location.row == 0:
-            return [next_column[0], next_column[1]]
-        else:
-            return [next_column[2], next_column[3]]
-    if len(current_column) == 4 and len(next_column) == 2:
-        if node.location.row in (0, 1):
-            return [next_column[0]]
-        else:
-            return [next_column[1]]
 
     already_connected = _get_already_connected(current_column)
     proposed_nodes = next_column[
@@ -201,6 +218,19 @@ def _pick_connections(
         to pick.
     @return: list of nodes to add a new connection
     """
+
+    # This are always fixed, to avoid weird graphs
+    if len(current_column) == 2 and len(next_column) == 4:
+        if node.location.row == 0:
+            return [next_column[0], next_column[1]]
+        else:
+            return [next_column[2], next_column[3]]
+    if len(current_column) == 4 and len(next_column) == 2:
+        if node.location.row in (0, 1):
+            return [next_column[0]]
+        else:
+            return [next_column[1]]
+
     potential_connections = _find_valid_connections(
         node,
         current_column,
@@ -213,7 +243,9 @@ def _pick_connections(
         1,
         min(max_connections or 1, len(potential_connections)),
     )
-    if num_connections < len(potential_connections):
+    if num_connections == len(potential_connections):
+        selected_connections = potential_connections
+    else:
         # We prioritize selection based on the fewest number of connections
         chance_weights: List[int] = []
         for conn, _ in potential_connections:
@@ -223,8 +255,6 @@ def _pick_connections(
             weights=chance_weights,
             k=num_connections,
         )
-    else:
-        selected_connections = potential_connections
 
     new_connections: List[Node] = []
     for _, snode in selected_connections:
@@ -307,6 +337,9 @@ def _first_pass_hookup(nodes: List[List[Node]]) -> List[List[Node]]:
                 ),
             )
 
+            # Remove duplicates
+            node.connections = list(set(node.connections))
+
     return connected_nodes
 
 
@@ -381,7 +414,7 @@ def generate_graph(num_columns: Optional[int] = 0) -> Graph:
     Randomly generate a directed graph.
 
     @param num_columns: integer representing the number of additional columns.
-        If num_columns is 0, returns a first and last column.
+        If num_columns is 0, returns three columns.
     @return: directed graph
     """
     graph = Graph(nodes=[])

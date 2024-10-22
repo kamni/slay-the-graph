@@ -8,5 +8,5 @@ from .view import display_graph
 
 
 if __name__ == '__main__':
-    graph = generate_graph()
+    graph = generate_graph(1)
     display_graph(graph)
