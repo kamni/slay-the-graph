@@ -181,7 +181,7 @@ def _find_valid_backwards_connections(
 
     already_connected = _get_already_connected(previous_column)
     proposed_nodes = previous_column[
-        max(0, node.location.row-1):min(len(previous_column)-1, node.location.row+1)
+        max(0, node.location.row-1):min(len(previous_column)-1, node.location.row+1) + 1
     ]
     proposed_connections: List[Tuple[Node, Node]] = []
     for possible_connection in proposed_nodes:
@@ -290,11 +290,12 @@ def _pick_backwards_connection(
     chance_weights: List[int] = []
     for conn, _ in potential_connections:
         chance_weights.append(3 - conn)
-    selected_connection = random.choice(
+    selected_connection = random.choices(
         potential_connections,
         weights=chance_weights,
+        k=1,
     )
-    return selected_connection[1]
+    return selected_connection[0][1]
 
 
 def _first_pass_hookup(nodes: List[List[Node]]) -> List[List[Node]]:
@@ -382,11 +383,8 @@ def _second_pass_correction(nodes: List[List[Node]]) -> List[List[Node]]:
 
                 row.connections.extend(new-connections)
 
-        # Now we need to check the backwards connections
+        # Now we need to check the backwards connections.
         for jdx, row in enumerate(next_column):
-            if idx == 0:
-                break
-
             already_connected = _get_already_connected(current_column)
             connected_to_row = list(
                 filter(
@@ -404,7 +402,7 @@ def _second_pass_correction(nodes: List[List[Node]]) -> List[List[Node]]:
                     # Indicates a problem in the algorithm and requires a rewrite.
                     # A user should never see this.
                     raise RuntimeError(
-                        f"Unable to generate valid backward connection ({idx, jdx}): {connected_nodes}"
+                        f"Unable to generate valid backward connection ({idx+x}, {jdx}): {connected_nodes}"
                     )
 
                 new_connection.connections.append(row)

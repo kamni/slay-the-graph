@@ -28,6 +28,14 @@ class Node(BaseModel):
 
     __hash__ = object.__hash__
 
+    def __repr__(self):
+        coords = f"({self.location.column}, {self.location.row})"
+        connection_coords: List[str] = []
+        for connection in (self.connections or []):
+            coord = f"({connection.location.column}, {connection.location.row})"
+            connection_coords.append(coord)
+        return f"Node({coords}, connections={connection_coords})"
+
     @property
     def name(self):
         return f"{self.location.column}, {self.location.row}"
