@@ -3,20 +3,21 @@ SPDX-FileCopyrightText: J Leadbetter <j@jleadbetter.com>
 SPDX-License-Identifier: MIT
 """
 
-from .model import Graph
+from typing import List, Tuple
 
 import igraph
 from matplotlib import pyplot
+
+from .model import Graph
 
 
 def display_graph(graph: Graph):
     vertices = graph.flatten_nodes()
     num_vertices = len(vertices)
-    edges = [
-        (node.id, connection.id)
-        for node in vertices
-        for connection in node.connections
-    ]
+    edges: List[Tuple[int, int]] = []
+    for vertex in vertices:
+        for connection in (vertex.connections or []):
+            edges.append((vertex.id, connection.id))
 
     ig = igraph.Graph(num_vertices, edges)
 

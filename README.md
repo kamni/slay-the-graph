@@ -8,6 +8,10 @@ This concept project just generates the directed graph that the player
 character will traverse; it does not generate the actual content of the nodes
 (e.g., chests, monsters).
 
+**NOTE:** This code is intended to be translated into C# by someone who isn't
+familiar with Python. So some Pythonisms like negative list indexing and
+list comprehensions have been replaced for readability.
+
 
 ## Requirements
 
