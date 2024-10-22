@@ -20,15 +20,15 @@ def _populate_nodes(num_columns: int) -> List[List[Node]]:
 
     nodes: List[List[Node]] = []
 
-    first_row: List[Node] = []
+    first_column: List[Node] = []
     for idx in range(3):
-        first_row.append(
+        first_column.append(
             Node(
                 id=idx,
                 location=Location(column=0, row=idx),
             ),
          )
-    nodes.append(first_row)
+    nodes.append(first_column)
 
     id_counter = 3
     if num_columns > 0:
@@ -38,7 +38,7 @@ def _populate_nodes(num_columns: int) -> List[List[Node]]:
             midpoint = None
 
         for idx in range(num_columns):
-            row: List[Nodes] = []
+            column: List[Nodes] = []
 
             if idx == midpoint:
                 num_nodes = 2
@@ -46,33 +46,33 @@ def _populate_nodes(num_columns: int) -> List[List[Node]]:
                 num_nodes = random.randint(3, 4)
 
             for jdx in range(num_nodes):
-                row.append(
+                column.append(
                     Node(
                         id=id_counter + jdx,
                         location=Location(column=len(nodes), row=jdx),
                     ),
                 )
-            nodes.append(row)
+            nodes.append(column)
             id_counter += num_nodes
 
-    second_to_last_row: List[Node] = []
+    second_to_last_column: List[Node] = []
     for idx in range(2):
-        second_to_last_row.append(
+        second_to_last_column.append(
             Node(
                 id=id_counter + idx,
                 location=Location(column=len(nodes), row=idx),
             ),
         )
     id_counter += 2
-    nodes.append(second_to_last_row)
+    nodes.append(second_to_last_column)
 
-    last_row = [
+    last_column = [
         Node(
             id=id_counter,
             location=Location(column=len(nodes), row=0),
         ),
     ]
-    nodes.append(last_row)
+    nodes.append(last_column)
 
     return nodes
 
