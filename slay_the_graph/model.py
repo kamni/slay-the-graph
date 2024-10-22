@@ -26,6 +26,8 @@ class Node(BaseModel):
     location: Location
     connections: Optional[List['Node']] = None
 
+    __hash__ = object.__hash__
+
     @property
     def name(self):
         return f"{self.location.column}, {self.location.row}"

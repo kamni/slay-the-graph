@@ -63,26 +63,30 @@ def _does_not_cross(
     possible_connection: Node,
     already_connected: List[Tuple[Node, Node]]
 ) -> bool:
-    cross_points_above = list(
+    cross_points = list(
         filter(
-            lambda x: x[0] > node.row and x[1] < possible_connection.row,
+            lambda x: (
+                (
+                    x[0].location.row > node.location.row
+                    and x[1].location.row < possible_connection.location.row
+                )
+                or
+                (
+                    x[0].location.row < node.location.row
+                    and x[1].location.row > possible_connection.location.row
+                )
+            ),
             already_connected,
         ),
     )
-    cross_points_below = list(
-        filter(
-            lambda x: x[0] < node.row and x[1] > possible_connection.row,
-            already_connected,
-        ),
-    )
-    return len(cross_points_above + cross_points_below) == 0
+    return len(cross_points) == 0
 
 
-def _find_viable_connections(
+def _find_valid_connections(
     node: Node,
     current_column: List[Node],
     next_column: List[Node]
-) -> List[Node]:
+) -> List[Tuple[int, Node]]:
     """
     Select nodes from the next column that are viable to connect to.
 
@@ -114,18 +118,21 @@ def _find_viable_connections(
     ]
     proposed_connections: List[Tuple[Node, Node]] = []
     for possible_connection in proposed_nodes:
-        proposed_connections.append(node, possible_connection)
+        proposed_connections.append((node, possible_connection))
     unused_connections = list(set(proposed_connections).difference(set(already_connected)))
 
     viable_nodes: List[Tuple[int, Node]] = []
     for _, possible_node in unused_connections:
         if _does_not_cross(node, possible_node, already_connected):
-            num_connections = len(filter(
-                lambda x: x[0] == possible_node,
-                already_connected,
-            ))
+            num_connections = len(
+                list(
+                    filter(
+                        lambda x: x[0] == possible_node,
+                        already_connected,
+                    ),
+                ),
+            )
             viable_nodes.append((num_connections, possible_node))
-    viable_nodes.sort()
     return viable_nodes
 
 
@@ -153,14 +160,37 @@ def _first_pass_hookup(nodes: List[List[Node]]) -> List[List[Node]]:
         next_column = connected_nodes[idx+1]
 
         for jdx, node in enumerate(current_column):
-            connections: List[Node] = []
-            if jdx == 0:
-                connections.append(next_column[0])
-            elif jdx == len(current_column) - 1:
-                connections.append(next_column[len(next_column)-1])
+            if not node.connections:
+                node.connections = []
 
-            # TODO: prioritize connections by lowest first
-            node.connections = connections
+            if jdx == 0:
+                node.connections.append(next_column[0])
+            elif jdx == len(current_column) - 1:
+                node.connections.append(next_column[len(next_column)-1])
+
+            potential_connections = _find_valid_connections(
+                node,
+                current_column,
+                next_column,
+            )
+            if not potential_connections:
+                continue
+
+            try:
+                num_connections = random.randint(1, len(potential_connections))
+            except:
+                import pdb; pdb.set_trace()
+            # We prioritize selection based on the fewest number of connections
+            chance_weights: List[int] = []
+            for conn, _ in potential_connections:
+                chance_weights.append(3 - conn)
+            selected_connections = random.choices(
+                potential_connections,
+                weights=chance_weights,
+                k=num_connections,
+            )
+            for _, snode in selected_connections:
+                node.connections.append(snode)
 
     return connected_nodes
 
@@ -183,13 +213,4 @@ def generate_graph(num_columns: Optional[int] = 0) -> Graph:
     first_pass = _first_pass_hookup(base_nodes)
     final_pass = _second_pass_correction(first_pass)
     graph.nodes = final_pass
-
-    # TODO: remove debugging
-    print(graph)
-    for idx, column in enumerate(graph.nodes):
-        print(f"Column {idx}:")
-        for jdx, row in enumerate(column):
-            print(f"\tRow {jdx}:")
-            for connection in (row.connections or []):
-                print(f"-> ({connection.location.column}, {connection.location.row})")
     return graph
