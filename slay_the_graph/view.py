@@ -12,6 +12,12 @@ from .model import Graph
 
 
 def display_graph(graph: Graph):
+    """
+    Display the provided graph using igraph
+
+    @param graph: Graph object generated from controller.py
+    """
+
     vertices = graph.flatten_nodes()
     num_vertices = len(vertices)
     edges: List[Tuple[int, int]] = []
@@ -19,7 +25,7 @@ def display_graph(graph: Graph):
         for connection in (vertex.connections or []):
             edges.append((vertex.id, connection.id))
 
-    ig = igraph.Graph(num_vertices, edges)
+    ig = igraph.Graph(num_vertices, edges, directed=True)
 
     fig, ax = pyplot.subplots(figsize=(5,5))
     igraph.plot(
