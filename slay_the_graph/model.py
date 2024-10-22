@@ -26,6 +26,10 @@ class Node(BaseModel):
     location: Location
     connections: Optional[List['Node']] = None
 
+    @property
+    def name(self):
+        return f"{self.location.column}, {self.location.row}"
+
 
 class Graph(BaseModel):
     """
