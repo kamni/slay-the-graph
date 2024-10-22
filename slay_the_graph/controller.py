@@ -384,6 +384,9 @@ def _second_pass_correction(nodes: List[List[Node]]) -> List[List[Node]]:
 
         # Now we need to check the backwards connections
         for jdx, row in enumerate(next_column):
+            if idx == 0:
+                break
+
             already_connected = _get_already_connected(current_column)
             connected_to_row = list(
                 filter(
